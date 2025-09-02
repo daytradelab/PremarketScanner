@@ -33,5 +33,5 @@ jobs:
           git config user.name "GitHub Action"
           git config user.email "action@github.com"
           git add output/*
-          git commit -m "Update breakout results"
+          git commit -m "Update breakout results" || echo "No changes to commit"
           git push
