@@ -2,7 +2,7 @@ name: Update Breakout Scanner
 
 on:
   schedule:
-    - cron: '*/5 * * * *'  # Every 5 minutes
+    - cron: '*/5 * * * *'
   workflow_dispatch:
 
 jobs:
@@ -20,13 +20,15 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install yfinance pandas
+          pip install yfinance pandas beautifulsoup4 requests
 
       - name: Show repo structure
         run: ls -R ../
 
       - name: Run breakout scanner
-        run: python ../scanner.py
+        run: |
+          echo "Running scanner.py..."
+          python ../scanner.py
 
       - name: Commit updated results
         run: |
@@ -35,3 +37,4 @@ jobs:
           git add output/*
           git commit -m "Update breakout results" || echo "No changes to commit"
           git push
+
