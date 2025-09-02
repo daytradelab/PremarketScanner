@@ -12,6 +12,8 @@ jobs:
     steps:
     - name: Checkout repo
       uses: actions/checkout@v3
+      with:
+        ref: main  # 👈 Ensures you're on the main branch
 
     - name: Set up Python
       uses: actions/setup-python@v4
@@ -37,8 +39,9 @@ jobs:
           git config user.email "action@github.com"
           git add output/*
           git commit -m "Update breakout results"
-          git push
+          git push origin HEAD:main  # 👈 Push to main explicitly
         else
           echo "No breakout results to commit."
+
 
 
