@@ -4,52 +4,67 @@ from bs4 import BeautifulSoup
 import os
 from datetime import datetime
 
-# Create output folder if it doesn't exist
-os.makedirs("output", exist_ok=True)
-
-# Finviz URL for premarket gappers
-url = "https://finviz.com/screener.ashx?v=111&s=ta_gapup"
-
-headers = {
-    "User-Agent": "Mozilla/5.0"
-}
-
-try:
-    print("Fetching data from Finviz...")
+def fetch_finviz_data():
+    url = "https://finviz.com/screener.ashx?v=111&s=ta_gapup"
+    headers = {"User-Agent": "Mozilla/5.0"}
     response = requests.get(url, headers=headers)
-    soup = BeautifulSoup(response.content, "html.parser")
+    if response.status_code != 200:
+        raise ConnectionError(f"Failed to fetch Finviz data: {response.status_code}")
+    return response.content
 
-    # Extract table rows
+def parse_table(html):
+    soup = BeautifulSoup(html, "html.parser")
     table = soup.find("table", class_="table-light")
+    if not table:
+        raise ValueError("Finviz table not found")
     rows = table.find_all("tr")[1:]  # Skip header
+    return rows
 
-    data = []
+def extract_candidates(rows):
+    candidates = []
     for row in rows:
         cols = row.find_all("td")
-        if len(cols) < 10:
+        if len(cols) < 11:
             continue
-        ticker = cols[1].text.strip()
-        price = float(cols[8].text.replace("$", "").replace(",", ""))
-        volume = int(cols[9].text.replace(",", ""))
-        gap = float(cols[10].text.replace("%", "").replace("+", ""))
+        try:
+            ticker = cols[1].text.strip()
+            price = float(cols[8].text.replace("$", "").replace(",", ""))
+            volume = int(cols[9].text.replace(",", ""))
+            gap = float(cols[10].text.replace("%", "").replace("+", ""))
+            if price > 1 and volume > 100_000 and gap > 3:
+                candidates.append({
+                    "Ticker": ticker,
+                    "Price": price,
+                    "Volume": volume,
+                    "Gap %": gap
+                })
+        except Exception as e:
+            print(f"Skipping row due to error: {e}")
+    return candidates
 
-        # Filter logic
-        if price > 1 and volume > 100000 and gap > 3:
-            data.append({
-                "Ticker": ticker,
-                "Price": price,
-                "Volume": volume,
-                "Gap %": gap
-            })
+def save_to_csv(data):
+    os.makedirs("output", exist_ok=True)
+    timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M")
+    path = f"output/breakouts_{timestamp}.csv"
+    pd.DataFrame(data).to_csv(path, index=False)
+    print(f"Saved {len(data)} breakout candidates to {path}")
 
-    if data:
-        df = pd.DataFrame(data)
-        timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M")
-        output_path = f"output/breakouts_{timestamp}.csv"
-        df.to_csv(output_path, index=False)
-        print(f"Saved {len(df)} breakout candidates to {output_path}")
-    else:
-        print("No breakout candidates found.")
+def main():
+    print("Starting breakout scan...")
+    try:
+        html = fetch_finviz_data()
+        rows = parse_table(html)
+        candidates = extract_candidates(rows)
+        if candidates:
+            save_to_csv(candidates)
+            exit(0)
+        else:
+            print("No breakout candidates found.")
+            exit(20)
+    except Exception as e:
+        print(f"Unhandled error: {e}")
+        exit(2)
 
-except Exception as e:
-    print(f"Error during scan: {e}")
+if __name__ == "__main__":
+    main()
+
