@@ -22,11 +22,11 @@ jobs:
         run: |
           pip install yfinance pandas
 
+      - name: Show repo structure
+        run: ls -R ../
+
       - name: Run breakout scanner
-       - name: Run breakout scanner
         run: python ../scanner.py
-
-
 
       - name: Commit updated results
         run: |
