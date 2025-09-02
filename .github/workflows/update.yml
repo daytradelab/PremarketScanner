@@ -23,7 +23,8 @@ jobs:
           pip install yfinance pandas
 
       - name: Run breakout scanner
-        run: python scanner.py
+       run: python /home/runner/work/PremarketScanner/scanner.py
+
 
       - name: Commit updated results
         run: |
