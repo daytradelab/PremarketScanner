@@ -3,7 +3,7 @@ name: Update Breakout Scanner
 on:
   workflow_dispatch:
   schedule:
-    - cron: '0 13 * * 1-5'  # Runs at 13:00 UTC (8:00 AM EST) Monday–Friday
+    - cron: '0 13 * * 1-5'  # 8:00 AM EST, Mon–Fri
 
 jobs:
   run-scanner:
@@ -23,20 +23,22 @@ jobs:
         python -m pip install --upgrade pip
         pip install pandas beautifulsoup4 requests
 
-    - name: Show repo structure
-      run: ls -R
-
     - name: Run breakout scanner
-      run: python scanner.py
-
-    - name: Commit updated results
       run: |
-        git config user.name "GitHub Action"
-        git config user.email "action@github.com"
+        echo "Running scanner.py..."
+        python scanner.py
+
+    - name: Commit results if any
+      run: |
+        echo "Checking for output files..."
         if [ -d "output" ] && [ "$(ls -A output)" ]; then
+          echo "Output found. Committing results..."
+          git config user.name "GitHub Action"
+          git config user.email "action@github.com"
           git add output/*
           git commit -m "Update breakout results"
           git push
         else
           echo "No breakout results to commit."
+
 
