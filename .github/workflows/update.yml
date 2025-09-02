@@ -2,7 +2,7 @@ name: Update Breakout Scanner
 
 on:
   schedule:
-    - cron: '*/5 * * * *'
+    - cron: '*/5 * * * *'  # Every 5 minutes
   workflow_dispatch:
 
 jobs:
@@ -28,7 +28,7 @@ jobs:
       - name: Run breakout scanner
         run: |
           echo "Running scanner.py..."
-          python ../scanner.py
+          python ../scanner.py || echo "scanner.py crashed with exit code $?"
 
       - name: Commit updated results
         run: |
